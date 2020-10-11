@@ -1,0 +1,320 @@
+package assign1;
+import java.io.*;
+import base.Compressor;
+import java.util.Comparator;
+import java.util.PriorityQueue;
+
+/**
+ * Assignment 1
+ * Submitted by: 
+ * Student 1.Sagi David 	ID# 207597576
+ * Student 2.tzlil stem 	ID# 205779309
+ * Student 3.Liran shoshana ID# 312557978
+ */
+
+public class HuffmanEncoderDecoder implements Compressor
+{	
+	public HuffmanEncoderDecoder()
+	{
+
+	}
+
+	@Override
+	public void Compress(String[] input_names, String[] output_names)
+	{
+		Comparator<TreeCoding> Compare_frequency = new Comparator<TreeCoding>()
+		{
+			@Override
+			public int compare(TreeCoding h1, TreeCoding h2)
+			{
+				return h1.character_frequency - h2.character_frequency;
+			}
+		};
+
+		PriorityQueue<TreeCoding> pq= new PriorityQueue<TreeCoding>(Compare_frequency);
+		final int ascii_table_size = 256;
+		int[] frequency = new int [ascii_table_size];
+		String[] array_of_encodings = new String [ascii_table_size];
+		FileInputStream input_stream = null;
+		FileOutputStream output_stream = null;
+		int current_byte;
+		int temp = 0;
+		int counter = 0;
+		int counter1 = 0;
+		String output = "";
+
+		try
+		{
+			System.out.println("Hello, The compression process begins :)");
+			input_stream = new FileInputStream(input_names[0]);
+			output_stream = new FileOutputStream(output_names[0]);
+			
+			System.out.println("---------------");
+			System.out.println("Compress does a frequency check.");
+			while ((current_byte = input_stream.read()) != -1) 
+			{
+				frequency[current_byte] ++;
+			}
+
+			int most_frequent = 0;
+
+			for(int i = 0 ; i < ascii_table_size ; i++)
+			{
+				if(frequency[i] > 0)
+					pq.add(new TreeCoding(frequency[i], i, null, null));
+
+				if(most_frequent  < frequency[i])
+					most_frequent = frequency[i];
+			}
+			
+			while(most_frequent != 0)
+			{
+				most_frequent /= 10;
+				counter++;
+			}
+
+			output_stream.write(counter);
+			System.out.println("---------------");
+			System.out.println("Inserts the frequency array into a file.");
+			for(int i = 0 ; i < ascii_table_size ; i++)
+			{
+				counter1 = 0;
+				most_frequent = frequency[i];
+				while(most_frequent != 0)
+				{
+					most_frequent /= 10;
+					counter1++;
+				}
+
+				most_frequent = frequency[i];
+				for(int j = 0 ; j < counter ; j++)
+				{
+					if(j < counter1)
+					{
+						temp = most_frequent % 10; 
+						most_frequent /= 10;
+						output_stream.write(temp);
+					}
+					else
+					{
+						temp = 0;
+						output_stream.write(temp);
+					}
+				}
+			}
+
+			TreeCoding root = null; 
+
+			System.out.println("---------------");
+			System.out.println("Creates the Hoffman Tree.");
+			
+			while (pq.size() > 1)
+			{ 
+				TreeCoding left_son = pq.poll(); 
+
+				TreeCoding  right_son = pq.poll(); 
+
+				TreeCoding parent = new TreeCoding(left_son.character_frequency + right_son.character_frequency,0,left_son,right_son); 
+
+				pq.add(parent); 
+			} 
+
+			root = pq.poll();
+			
+			System.out.println("---------------");
+			System.out.println("The encoding table:");
+			root.encoding_for_each_character(root, "", array_of_encodings);
+
+			input_stream = new FileInputStream(input_names[0]);
+
+			System.out.println("---------------");
+			System.out.println("Compresses the data.....");
+			temp = 0;
+			counter = 7;
+			while ((current_byte = input_stream.read()) != -1) 
+			{
+				output = array_of_encodings[current_byte];
+
+				for(int i = 0 ; i < output.length() ; i++)
+				{
+					if(counter > -1)
+					{
+						if(output.charAt(i) == '1')
+						{
+							temp += 1 * (Math.pow(2, (double)counter));
+							counter--;
+						}
+						else	
+							counter--;
+					}
+					else
+					{
+						output_stream.write(temp);
+						temp = 0 ;
+						counter = 7 ;
+
+						if(output.charAt(i) == '1')
+						{
+							temp += 1 * (Math.pow(2, (double)counter));
+							counter--;
+						}
+						else
+							counter--;
+					}
+				}
+			}
+			if(counter > -1)
+				output_stream.write(temp);
+			
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		
+	}
+
+	@Override
+	public void Decompress(String[] input_names, String[] output_names)
+	{
+		final int ascii_table_size = 256;
+		FileInputStream input_stream = null;
+		FileOutputStream output_stream = null;
+		int[] frequency = new int [ascii_table_size];
+		String[] array_of_encodings = new String [ascii_table_size];
+		int current_byte;
+		int counter1 = 0;
+		int counter2 = 0;
+		String output = "";
+
+		Comparator<TreeCoding> Compare_frequency = new Comparator<TreeCoding>()
+		{
+			@Override
+			public int compare(TreeCoding h1, TreeCoding h2)
+			{
+				return h1.character_frequency - h2.character_frequency;
+			}
+		};
+
+		PriorityQueue<TreeCoding> pq= new PriorityQueue<TreeCoding>(Compare_frequency);
+
+		try
+		{
+			System.out.println("---------------");
+			System.out.println("Hello, The decryption process begins :)");
+			input_stream = new FileInputStream(input_names[0]);
+			output_stream = new FileOutputStream(output_names[0]);
+
+			counter1 = (int) input_stream.read();
+
+			System.out.println("---------------");
+			System.out.println("Decompress does a frequency check.");
+			for(int i = 0 ; i < ascii_table_size ; i++)
+			{
+				counter2 = 0 ;
+
+				for(int j = 0 ; j < counter1 ; j++)
+				{
+					current_byte = input_stream.read();
+					counter2 += (current_byte * (Math.pow(10, (double)j)));
+
+				}
+
+				frequency[i] = counter2;
+			}
+			
+			for(int i = 0 ; i < ascii_table_size ; i++)
+			{
+				if(frequency[i] > 0)
+					pq.add(new TreeCoding(frequency[i], i, null, null));
+			}
+
+			TreeCoding root = null; 
+
+			System.out.println("---------------");
+			System.out.println("Creates the Hoffman Tree.");
+			
+			while (pq.size() > 1)
+			{ 
+				TreeCoding left_son = pq.poll(); 
+
+				TreeCoding  right_son = pq.poll(); 
+
+				TreeCoding parent = new TreeCoding(left_son.character_frequency + right_son.character_frequency,0,left_son,right_son); 
+
+				pq.add(parent); 
+			} 
+
+			root = pq.poll();
+			
+			System.out.println("---------------");
+			System.out.println("The encoding table:");
+			root.encoding_for_each_character(root, "", array_of_encodings);
+
+			TreeCoding head_of_the_coding_tree = root;
+
+			counter1 = 0;
+			
+			System.out.println("---------------");
+			System.out.println("Decompress the data.....");
+			
+			while ((current_byte = input_stream.read()) != -1) 
+			{
+				output = "";
+
+				for(int i = 7 ; i > -1 ; i--)
+				{
+					counter1 = (int) (current_byte / (Math.pow(2, (double)i)));
+					if(counter1 == 1)
+						output = output + "1";
+					if(counter1 == 0)
+						output = output + "0";
+
+					current_byte = (int) (current_byte % (Math.pow(2, (double)i)));
+				}
+
+				for(int i = 0 ; i < output.length() ; i++)
+				{
+					if(output.charAt(i) == '0')
+					{
+						root = root.left;
+
+						if(root.left == null && root.right == null)
+						{
+							output_stream.write(root.data);
+							root = head_of_the_coding_tree;
+						}
+					}
+					else
+					{
+						root = root.right;
+
+						if(root.left == null && root.right == null)
+						{
+							output_stream.write(root.data);
+							root = head_of_the_coding_tree;
+						}
+					}
+				}
+			}
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public byte[] CompressWithArray(String[] input_names, String[] output_names)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public byte[] DecompressWithArray(String[] input_names, String[] output_names)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+}
