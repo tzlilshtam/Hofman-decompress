@@ -1,0 +1,56 @@
+package assign1;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Comparator;
+import java.util.PriorityQueue;
+
+
+
+//Uncomment if you wish to use FileOutputStream and FileInputStream for file access.
+//import java.io.FileOutputStream;
+//import java.io.FileInputStream;
+
+public class HuffmanBetterEnDe extends HuffmanEncoderDecoder
+{
+
+	static String IN_FILE_PATH_1 = "C:\\Compress smiley.bmp";
+	static String OUT_FILE_PATH_1 = "C:\\Decompress smiley.bmp";
+	
+	public HuffmanBetterEnDe()
+	{
+
+	}
+
+	@Override
+	public void Compress(String[] input_names, String[] output_names1)
+	{
+		HuffmanEncoderDecoder h1 = new HuffmanEncoderDecoder();
+		String[] output_names2=new String[1];
+		output_names2[0]=IN_FILE_PATH_1;
+		h1.Compress(input_names, output_names2);
+		h1.Compress(output_names2, output_names1);
+	}
+
+	@Override
+	public void Decompress(String[] input_names, String[] output_names1)
+	{
+		HuffmanEncoderDecoder h1 = new HuffmanEncoderDecoder();
+		String[] output_names2=new String[1];
+		output_names2[0]=OUT_FILE_PATH_1;
+		h1.Decompress(input_names, output_names2);
+		h1.Decompress(output_names2, output_names1);
+	}
+	@Override
+	public byte[] CompressWithArray(String[] input_names, String[] output_names)
+	{
+		return null;
+	}
+
+	@Override
+	public byte[] DecompressWithArray(String[] input_names, String[] output_names)
+	{
+		return null;
+	}
+}
